@@ -108,7 +108,14 @@ class EdiOutputSendL10nPtSpms(Component):
                 "SOAPAction": "submeterFacturaElectronicaCRD",
             },
         )
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as err:
+            err.args = (
+                f"{err.args[0]}\nSPMS response body:\n{response.text}",
+                *err.args[1:],
+            )
+            raise
         response_xml = etree.fromstring(response.content)
         aceite = response_xml.xpath("//aceite")
         if not aceite or aceite[0].text != "S":
